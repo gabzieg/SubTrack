@@ -4,9 +4,7 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 ## Pendente (Fase 1)
 
-- [ ] **Decisão pendente:** adotar `kotlinx-datetime` como dependência? O cálculo de "próxima renovação" pra ciclo mensal/anual precisa de matemática de calendário (mês tem 28-31 dias) — fazer na mão com epochDay é possível pra diário/semanal mas erra pra mensal/anual. Regra do AGENTS.md exige aprovação antes de dependência nova.
-- [ ] Lógica de avanço de renovação (`nextRenewal(from, cycle, everyN)`) em `commonMain` + testes cobrindo virada de mês curto (ex: 31/jan + 1 mês) e ano bissexto.
-- [ ] Repositório sobre SQLDelight em `commonMain` expondo `Flow<List<Subscription>>`.
+- [ ] Repositório sobre SQLDelight em `commonMain` expondo `Flow<List<Subscription>>`, já ordenando pela próxima renovação calculada.
 - [ ] `expect`/`actual` do driver SQLDelight (Android já resolvido; iOS fica pra Fase 4).
 - [ ] Tela de lista: assinaturas ativas ordenadas pela próxima renovação + total mensal/anual no topo.
 - [ ] Tela de adicionar/editar assinatura (nome, valor, moeda, ciclo, everyN, data, categoria, dias de aviso).
@@ -17,6 +15,11 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [ ] Fechar todos os checkboxes de "Critério de aceite (MVP)" no SPEC.md.
 
 ## Concluído
+
+### Fase 1 — em andamento
+- [x] `kotlinx-datetime` 0.8.0 aprovado e adicionado (matemática de calendário pra ciclo mensal/anual).
+- [x] `nextRenewalOnOrAfter()` calculando a próxima renovação a partir da âncora, não da renovação anterior — 10 testes cobrindo mês curto, ano bissexto, ciclo trimestral e virada de ano.
+- [x] Schema passou a guardar `anchorEpochDay` (fonte da verdade) em vez de `nextRenewalEpochDay` (valor que envelhece sozinho se o app ficar sem abrir).
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.
