@@ -1,0 +1,47 @@
+# Catálogo de versões — fonte única das versões do projeto.
+#
+# ⚠️ Restrições conhecidas (confirmadas rodando build de verdade, não deduzidas):
+#   AGP 9.x  ─ o plugin KMP NÃO é mais compatível com com.android.library. O
+#              módulo shared declara o alvo Android dentro de kotlin { android {} }
+#              (o nome androidLibrary {} do AGP 9.0 já saiu depreciado no 9.3).
+#              AGP 10 (2S/2026) remove as APIs legadas — por isso nascemos no 9.
+#   :androidApp ─ é módulo Android puro, sem plugin KMP e sem org.jetbrains.compose.
+#              Usa androidx.compose via BOM. O Kotlin já vem embutido no AGP 9;
+#              só o plugin composeCompiler precisa ser aplicado à parte.
+#   sqldelight 2.3.2 ─ publicado contra kotlin-gradle-plugin 2.3.10. Subir o
+#              Kotlin além de 2.3.x é o risco mais provável de quebra aqui.
+
+[versions]
+agp = "9.3.1"
+kotlin = "2.3.21"
+ktlint = "14.2.0"
+sqldelight = "2.3.2"
+coroutines = "1.10.2"
+composeBom = "2026.06.01"
+androidx-activityCompose = "1.13.0"
+androidx-work = "2.11.2"
+compileSdk = "36"
+minSdk = "26"
+targetSdk = "36"
+
+[libraries]
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

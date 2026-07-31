@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+ktlint_code_style = intellij_idea
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+# Composable é PascalCase por convenção do próprio Compose — a regra padrão do
+# ktlint não conhece a anotação e acusaria todo composable como erro.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
+[*.kts]
+# O DSL do Gradle vive de encadeamento curto (libs.versions.x.get().toInt()).
+# Forçar quebra de linha a cada '.' deixa o build script ilegível.
+ktlint_standard_chain-method-continuation = disabled
+
+[*.{xml,yml,yaml}]
+indent_size = 2
