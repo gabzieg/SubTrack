@@ -17,6 +17,7 @@ kotlin = "2.3.21"
 ktlint = "14.2.0"
 sqldelight = "2.3.2"
 coroutines = "1.10.2"
+datetime = "0.8.0"
 composeBom = "2026.06.01"
 androidx-activityCompose = "1.13.0"
 androidx-work = "2.11.2"
@@ -26,6 +27,7 @@ targetSdk = "36"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
