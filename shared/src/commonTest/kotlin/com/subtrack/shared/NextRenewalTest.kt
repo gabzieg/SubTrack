@@ -26,9 +26,28 @@ class NextRenewalTest {
     }
 
     @Test
+    fun aRecentAnchorAbsorbsAProviderThatHasAlreadyDrifted() {
+        // Google Play trava no dia truncado pra sempre (28/fev, 28/mar, 28/abr).
+        // Este cálculo não deriva — mas se o usuário informa a cobrança que está
+        // na fatura, a derivação do provedor já veio embutida nessa data e as
+        // duas séries coincidem daí em diante. É o que torna o comportamento da
+        // Play Store compatível com o daqui na prática.
+        val alreadyDriftedAnchor = date("2026-02-28")
+        assertEquals(
+            date("2026-03-28"),
+            nextRenewalOnOrAfter(alreadyDriftedAnchor, BillingCycle.MONTHLY, 1, from = date("2026-03-01")),
+        )
+        assertEquals(
+            date("2026-04-28"),
+            nextRenewalOnOrAfter(alreadyDriftedAnchor, BillingCycle.MONTHLY, 1, from = date("2026-04-01")),
+        )
+    }
+
+    @Test
     fun monthlyDoesNotDriftAfterAShortMonth() {
-        // O ponto central: cobrança dia 31 cai em 28/fev, mas março volta pro 31.
-        // Se avançássemos a partir da renovação anterior, março viraria 28.
+        // Comportamento Stripe/Recurly e de cobrança direta no cartão: dia 31
+        // cai em 28/fev e março volta pro 31. Google Play faria 28/mar aqui —
+        // ver a nota em NextRenewal.kt sobre os dois comportamentos.
         val anchor = date("2026-01-31")
         assertEquals(
             date("2026-02-28"),

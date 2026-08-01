@@ -8,20 +8,28 @@ import kotlinx.datetime.plus
 
 /**
  * Calcula a próxima renovação sempre a partir da data-âncora, nunca a partir da
- * renovação anterior já calculada.
+ * renovação anterior já calculada. Cobrança dia 31 cai em 28/fev, e março volta
+ * pro dia 31 — o dia não derrete mês a mês.
  *
- * Isso importa por causa do mês curto: uma assinatura cobrada dia 31 cai em
- * 28/fev, mas a cobrança de março volta pro dia 31 — não fica presa no 28. Se
- * avançássemos "próxima = anterior + 1 mês", o dia iria derretendo mês a mês
- * (31/jan, 28/fev, 28/mar, ...) e passaria a divergir da cobrança real.
+ * ATENÇÃO: o mercado tem DOIS comportamentos e este é só um deles.
  *
- * A âncora não precisa ser a primeira cobrança: qualquer cobrança que de fato
- * ocorreu serve, porque o cálculo anda em ciclos inteiros e produz a mesma
- * série de datas. Por isso o app pede a data que está na fatura do cartão, que
- * o usuário consegue conferir, em vez da data em que assinou, que ele não
- * lembra.
+ *  - Stripe e Recurly truncam e voltam: 31/jan, 28/fev, 31/mar. É o que está
+ *    implementado aqui, e vale pra cobrança direto no cartão.
+ *  - Google Play trava no dia truncado PARA SEMPRE. A doc oficial é explícita:
+ *    "moved to the 28th of February and continues to renew on the 28th of each
+ *    month for the duration of the subscription"
+ *    (developer.android.com/google/play/billing/lifecycle/subscriptions).
+ *    A App Store aparenta fazer o mesmo — evidência de segunda mão, não da doc
+ *    da Apple.
  *
- * @param anchor uma data de cobrança real da assinatura.
+ * O que segura a diferença na prática é a âncora ser recente: qualquer cobrança
+ * que de fato ocorreu serve de âncora, porque o cálculo anda em ciclos inteiros.
+ * Se o usuário informa a cobrança que está na fatura, uma eventual derivação da
+ * Play Store já veio embutida nessa data, e as duas séries coincidem daí pra
+ * frente. A divergência só reaparece se a âncora for antiga — de antes da
+ * derivação ter acontecido.
+ *
+ * @param anchor uma data de cobrança real da assinatura, de preferência recente.
  * @param from data de referência (normalmente hoje).
  * @return a primeira ocorrência em [from] ou depois. Se [anchor] ainda está no
  *   futuro, a própria âncora é a resposta.

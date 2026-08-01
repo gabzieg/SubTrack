@@ -38,6 +38,8 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 ## Dívidas registradas (não bloqueiam a Fase 1)
 
+- **Dois comportamentos de mês curto no mercado, e só um está implementado.** Verificado na doc oficial do Google (developer.android.com/google/play/billing/lifecycle/subscriptions): a Play Store move a renovação pro dia 28 e **fica nele para sempre**. A App Store aparenta fazer igual (evidência de segunda mão). Stripe e Recurly truncam e voltam pro dia 31 — que é o que `NextRenewal.kt` faz. O que segura isso na prática é a âncora ser recente: se o usuário informa a cobrança da fatura, a derivação do provedor já veio embutida. A divergência só aparece com âncora antiga. Decidir depois se vale um campo de "provedor" por assinatura, ou re-ancorar quando o usuário confirmar uma cobrança.
+
 - **`ACCESS_NETWORK_STATE` no manifest, vindo do merge do WorkManager** (junto com `WAKE_LOCK`, `FOREGROUND_SERVICE`, `RECEIVE_BOOT_COMPLETED`). Não há `INTERNET`, então o app continua sem conseguir falar com a rede — o critério do SPEC se mantém. Mas a Play Store expõe essa lista pro usuário, e "nunca toca na rede" é o argumento central do produto. Ao implementar a notificação, avaliar remover `ACCESS_NETWORK_STATE` via `tools:node="remove"` (só é usada por constraint de rede, que não usamos). `RECEIVE_BOOT_COMPLETED` deve ficar — é o que faz o lembrete sobreviver a um reboot.
 - `today` é lido uma vez na composição — se o app ficar aberto atravessando a meia-noite, os rótulos ("Renova em N dias") só atualizam na próxima abertura.
 - Textos da UI estão fixos em português no código, fora de `strings.xml`. Migrar quando/se entrar segundo idioma.
