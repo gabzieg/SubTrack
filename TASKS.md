@@ -4,10 +4,8 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 ## Pendente (Fase 1)
 
-- [ ] Tela de lista: assinaturas ativas ordenadas pela próxima renovação + total mensal/anual no topo.
 - [ ] Tela de adicionar/editar assinatura (nome, valor, moeda, ciclo, everyN, data, categoria, dias de aviso).
 - [ ] Arquivar/desarquivar sem apagar histórico.
-- [ ] Formatação de moeda por locale (o total hoje aparece em centavos crus na tela esqueleto).
 - [ ] Agendamento de notificação via WorkManager + permissão POST_NOTIFICATIONS em runtime (Android 13+).
 - [ ] Ícone do app (lint acusa `MissingApplicationIcon`).
 - [ ] Fechar todos os checkboxes de "Critério de aceite (MVP)" no SPEC.md.
@@ -20,7 +18,11 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [x] Schema passou a guardar `anchorEpochDay` (fonte da verdade) em vez de `nextRenewalEpochDay` (valor que envelhece sozinho se o app ficar sem abrir).
 - [x] `SubscriptionRepository` sobre SQLDelight expondo `Flow<List<UpcomingSubscription>>` ordenado pela renovação calculada, + add/update/archive/delete.
 - [x] `expect`/`actual` do driver SQLDelight (Android pronto; iOS na Fase 4).
-- [x] 10 testes de repositório contra SQLite real em memória (driver JDBC) — schema, mapeamento de coluna e re-emissão do Flow exercitados de verdade. 27 testes no total.
+- [x] 10 testes de repositório contra SQLite real em memória (driver JDBC) — schema, mapeamento de coluna e re-emissão do Flow exercitados de verdade.
+- [x] `formatMoney` via `expect`/`actual`, delegando símbolo/separador pro locale do aparelho. Centavos convertidos por `BigDecimal` de escala fixa, nunca por `Double`.
+- [x] `WalletState` totalizando **por moeda** — somar BRL com USD daria número sem significado, e converter exigiria cotação (rede, proibida pelo SPEC).
+- [x] Tela de lista em Compose: card de totais, linhas ordenadas por renovação, estado vazio. `SubTrackApp` com DI na mão (grafo de 2 objetos não justifica biblioteca).
+- [x] 40 testes no total, `ktlintCheck build` limpo e sem warning.
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.
@@ -34,6 +36,10 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 **detekt:** não adotado. ktlint já cobre formatação e o `lint` do AGP já cobre análise estática de Android. Adicionar detekt seria uma terceira ferramenta com regras sobrepostas e mais uma matriz de compatibilidade pra manter — reavaliar só se surgir classe de bug que as duas atuais não pegam.
 
 ## Dívidas registradas (não bloqueiam a Fase 1)
+
+- **App nunca foi executado em device/emulador.** Tudo até aqui é build verde + teste de host. A tela de lista compila e o APK gera, mas ninguém viu a tela rodando. Validar antes de fechar a Fase 1.
+- `today` é lido uma vez na composição — se o app ficar aberto atravessando a meia-noite, os rótulos ("Renova em N dias") só atualizam na próxima abertura.
+- Textos da UI estão fixos em português no código, fora de `strings.xml`. Migrar quando/se entrar segundo idioma.
 
 - `targetSdk = 36` — lint acusa `OldTargetApi`. Subir junto com `compileSdk` quando a plataforma mais nova estiver instalada e testada.
 - Alvos Apple ainda não declarados no `shared`. **Restrição dura:** compilar alvo Apple exige macOS — no Windows não dá pra validar o caminho iOS localmente. A Fase 4 vai precisar de um Mac ou de um runner macOS no CI. A estrutura `commonMain` já está preparada, mas isso não é o mesmo que estar verificado.
