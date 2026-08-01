@@ -4,8 +4,6 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 ## Pendente (Fase 1)
 
-- [ ] Repositório sobre SQLDelight em `commonMain` expondo `Flow<List<Subscription>>`, já ordenando pela próxima renovação calculada.
-- [ ] `expect`/`actual` do driver SQLDelight (Android já resolvido; iOS fica pra Fase 4).
 - [ ] Tela de lista: assinaturas ativas ordenadas pela próxima renovação + total mensal/anual no topo.
 - [ ] Tela de adicionar/editar assinatura (nome, valor, moeda, ciclo, everyN, data, categoria, dias de aviso).
 - [ ] Arquivar/desarquivar sem apagar histórico.
@@ -20,6 +18,9 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [x] `kotlinx-datetime` 0.8.0 aprovado e adicionado (matemática de calendário pra ciclo mensal/anual).
 - [x] `nextRenewalOnOrAfter()` calculando a próxima renovação a partir da âncora, não da renovação anterior — 10 testes cobrindo mês curto, ano bissexto, ciclo trimestral e virada de ano.
 - [x] Schema passou a guardar `anchorEpochDay` (fonte da verdade) em vez de `nextRenewalEpochDay` (valor que envelhece sozinho se o app ficar sem abrir).
+- [x] `SubscriptionRepository` sobre SQLDelight expondo `Flow<List<UpcomingSubscription>>` ordenado pela renovação calculada, + add/update/archive/delete.
+- [x] `expect`/`actual` do driver SQLDelight (Android pronto; iOS na Fase 4).
+- [x] 10 testes de repositório contra SQLite real em memória (driver JDBC) — schema, mapeamento de coluna e re-emissão do Flow exercitados de verdade. 27 testes no total.
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.
