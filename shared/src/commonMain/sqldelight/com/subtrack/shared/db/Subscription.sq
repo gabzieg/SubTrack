@@ -35,6 +35,9 @@ UPDATE subscription
 SET name = ?, amountCents = ?, currency = ?, cycle = ?, cycleEveryN = ?, anchorEpochDay = ?, category = ?, notifyDaysBefore = ?, archived = ?
 WHERE id = ?;
 
+lastInsertedId:
+SELECT last_insert_rowid();
+
 setArchived:
 UPDATE subscription SET archived = ? WHERE id = ?;
 
