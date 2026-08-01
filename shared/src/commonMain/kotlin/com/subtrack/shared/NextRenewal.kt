@@ -7,15 +7,21 @@ import kotlinx.datetime.monthsUntil
 import kotlinx.datetime.plus
 
 /**
- * Calcula a próxima renovação sempre a partir da data-âncora (a primeira
- * cobrança), nunca a partir da renovação anterior já calculada.
+ * Calcula a próxima renovação sempre a partir da data-âncora, nunca a partir da
+ * renovação anterior já calculada.
  *
  * Isso importa por causa do mês curto: uma assinatura cobrada dia 31 cai em
  * 28/fev, mas a cobrança de março volta pro dia 31 — não fica presa no 28. Se
  * avançássemos "próxima = anterior + 1 mês", o dia iria derretendo mês a mês
  * (31/jan, 28/fev, 28/mar, ...) e passaria a divergir da cobrança real.
  *
- * @param anchor primeira data de cobrança da assinatura.
+ * A âncora não precisa ser a primeira cobrança: qualquer cobrança que de fato
+ * ocorreu serve, porque o cálculo anda em ciclos inteiros e produz a mesma
+ * série de datas. Por isso o app pede a data que está na fatura do cartão, que
+ * o usuário consegue conferir, em vez da data em que assinou, que ele não
+ * lembra.
+ *
+ * @param anchor uma data de cobrança real da assinatura.
  * @param from data de referência (normalmente hoje).
  * @return a primeira ocorrência em [from] ou depois. Se [anchor] ainda está no
  *   futuro, a própria âncora é a resposta.

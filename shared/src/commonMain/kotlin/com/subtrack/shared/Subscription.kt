@@ -3,8 +3,8 @@ package com.subtrack.shared
 import kotlinx.datetime.LocalDate
 
 /**
- * Uma assinatura já persistida. [anchor] é a primeira cobrança, não a próxima —
- * a próxima é sempre derivada (ver NextRenewal.kt).
+ * Uma assinatura já persistida. [anchor] é uma cobrança que já aconteceu, não a
+ * próxima — a próxima é sempre derivada (ver NextRenewal.kt).
  */
 data class Subscription(
     val id: Long,

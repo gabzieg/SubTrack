@@ -1,5 +1,5 @@
--- anchorEpochDay é a PRIMEIRA cobrança e é a fonte da verdade. A próxima
--- renovação não é persistida: é calculada a partir da âncora (ver
+-- anchorEpochDay é uma cobrança que já ocorreu e é a fonte da verdade. A
+-- próxima renovação não é persistida: é calculada a partir da âncora (ver
 -- NextRenewal.kt). Guardar "próxima renovação" no banco criaria um valor que
 -- envelhece sozinho — bastaria o app ficar meses sem abrir pra ficar errado.
 -- A ordenação por próxima renovação é feita em memória; a carteira típica tem

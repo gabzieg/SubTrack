@@ -24,11 +24,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.subtrack.shared.BillingCycle
 import com.subtrack.shared.SubscriptionDraft
-import com.subtrack.shared.parseMoneyToCents
+import com.subtrack.shared.formatMoney
 import kotlinx.datetime.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,15 +42,18 @@ fun AddSubscriptionScreen(
     modifier: Modifier = Modifier,
 ) {
     var name by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
+    // Só os dígitos. Os centavos preenchem da direita pra esquerda, então não
+    // existe entrada ambígua: digitar 5490 é R$ 54,90, e ponto ou vírgula nem
+    // chegam a ser digitáveis.
+    var amountDigits by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf("BRL") }
     var cycle by remember { mutableStateOf(BillingCycle.MONTHLY) }
     var anchorText by remember { mutableStateOf(today.toString()) }
     var cycleMenuOpen by remember { mutableStateOf(false) }
 
-    val amountCents = parseMoneyToCents(amountText)
+    val amountCents = amountDigits.toLongOrNull() ?: 0L
     val anchor = runCatching { LocalDate.parse(anchorText) }.getOrNull()
-    val canSave = name.isNotBlank() && amountCents != null && amountCents > 0 && anchor != null
+    val canSave = name.isNotBlank() && amountCents > 0 && anchor != null
 
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -64,16 +69,18 @@ fun AddSubscriptionScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
+        val amountDisplay = if (amountDigits.isEmpty()) "" else formatMoney(amountCents, currency)
         OutlinedTextField(
-            value = amountText,
-            onValueChange = { amountText = it },
+            // O cursor fica preso no fim: o texto exibido é derivado, não o que
+            // foi digitado, e deixá-lo livre faria dígito novo cair no meio do
+            // valor formatado.
+            value = TextFieldValue(amountDisplay, selection = TextRange(amountDisplay.length)),
+            onValueChange = { typed ->
+                amountDigits = typed.text.filter { it.isDigit() }.trimStart('0').take(12)
+            },
             label = { Text("Valor") },
             singleLine = true,
-            isError = amountText.isNotBlank() && amountCents == null,
-            supportingText = {
-                if (amountText.isNotBlank() && amountCents == null) Text("Valor inválido")
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -113,20 +120,18 @@ fun AddSubscriptionScreen(
             }
         }
 
+        // Qualquer cobrança que já tenha acontecido serve de âncora — o cálculo
+        // anda em ciclos inteiros a partir dela, então a série de datas é a
+        // mesma. Pedir "a data da cobrança" em vez de "a primeira" é mais fácil
+        // de responder: está na fatura do cartão, não na memória.
         OutlinedTextField(
             value = anchorText,
             onValueChange = { anchorText = it },
-            label = { Text("Primeira cobrança (AAAA-MM-DD)") },
+            label = { Text("Data da cobrança (AAAA-MM-DD)") },
             singleLine = true,
             isError = anchor == null,
             supportingText = {
-                if (anchor == null) {
-                    Text("Data inválida")
-                } else {
-                    // A âncora é a PRIMEIRA cobrança, não a próxima — é dela que
-                    // toda renovação futura é derivada (ver NextRenewal.kt).
-                    Text("A data em que essa assinatura foi cobrada pela primeira vez")
-                }
+                if (anchor == null) Text("Data inválida")
             },
             modifier = Modifier.fillMaxWidth(),
         )
@@ -142,7 +147,7 @@ fun AddSubscriptionScreen(
                     onSave(
                         SubscriptionDraft(
                             name = name.trim(),
-                            amountCents = amountCents!!,
+                            amountCents = amountCents,
                             currency = currency,
                             cycle = cycle,
                             anchor = anchor!!,

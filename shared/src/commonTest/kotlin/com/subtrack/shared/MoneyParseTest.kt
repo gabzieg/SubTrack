@@ -22,16 +22,12 @@ class MoneyParseTest {
     }
 
     @Test
-    fun aSingleDecimalDigitIsPaddedToCents() {
-        assertEquals(5490, parseMoneyToCents("54,9"))
-    }
-
-    @Test
-    fun threeDigitsAfterALoneSeparatorMeanThousands() {
-        // "1.234" é mil duzentos e trinta e quatro, não um e vinte e três.
+    fun threeDigitsAfterASeparatorCanOnlyBeThousands() {
+        // Decimal tem sempre 2 casas, então 3 dígitos não têm outra leitura.
         assertEquals(123400, parseMoneyToCents("1.234"))
         assertEquals(123400, parseMoneyToCents("1,234"))
         assertEquals(123456700, parseMoneyToCents("1.234.567"))
+        assertEquals(5490100, parseMoneyToCents("54,901"))
     }
 
     @Test
@@ -48,19 +44,11 @@ class MoneyParseTest {
     }
 
     @Test
-    fun rejectsMoreThanTwoDecimalPlaces() {
-        // 4 dígitos depois do separador não cabem em nenhuma das duas leituras:
-        // não é milhar (que teria 3) nem decimal (que teria no máximo 2).
+    fun rejectsADecimalPartThatIsNotExactlyTwoDigits() {
+        // Uma casa é entrada pela metade, quatro não é nem decimal nem milhar.
+        assertNull(parseMoneyToCents("54,9"))
         assertNull(parseMoneyToCents("54,9012"))
         assertNull(parseMoneyToCents("1.234,567"))
-    }
-
-    @Test
-    fun aLoneSeparatorWithThreeDigitsIsThousandsEvenWhenItLooksLikeCents() {
-        // "54,901" é cinquenta e quatro mil e novecentos e um. Cai na mesma
-        // regra de "1.234" — é a consequência assumida da ambiguidade, e o
-        // caminho pra digitar centavos continua sendo "54,90".
-        assertEquals(5490100, parseMoneyToCents("54,901"))
     }
 
     @Test

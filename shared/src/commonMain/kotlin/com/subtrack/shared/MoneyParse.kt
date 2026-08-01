@@ -1,18 +1,14 @@
 package com.subtrack.shared
 
 /**
- * Converte o que o usuário digitou em centavos, aceitando vírgula ou ponto como
- * separador decimal sem exigir que ele saiba qual o app espera.
+ * Converte texto monetário em centavos. Valor sempre tem exatamente 2 casas
+ * decimais, e é isso que dissolve a ambiguidade de "1.234": como decimal nunca
+ * tem 3 dígitos, um separador seguido de 3 dígitos só pode ser agrupamento de
+ * milhar. Vírgula e ponto são aceitos indistintamente.
  *
- * A ambiguidade real é "1.234": pode ser mil duzentos e trinta e quatro ou um
- * e vinte e três. As regras abaixo são as que batem com a intuição na maioria
- * dos casos:
- *
- *  - último separador seguido de 1 ou 2 dígitos → é o decimal ("54,90");
- *  - último separador seguido de 3 dígitos, e todos os separadores iguais →
- *    é agrupamento de milhar ("1.234", "1.234.567");
- *  - separadores diferentes → o último é o decimal ("1.234,56" e "1,234.56"
- *    dão o mesmo valor).
+ * O formulário do app nem chega aqui — lá a entrada é só de dígitos e os
+ * centavos são preenchidos da direita pra esquerda. Esta função existe pro
+ * caminho de import (Fase 3), onde o texto vem de fora e precisa ser validado.
  *
  * @return centavos, ou null se a entrada não for um valor monetário válido.
  */
@@ -23,24 +19,30 @@ fun parseMoneyToCents(input: String): Long? {
     if (cleaned.isEmpty() || cleaned.none { it.isDigit() }) return null
 
     val lastSeparator = cleaned.indexOfLast { it == '.' || it == ',' }
-    val digitsAfterSeparator = if (lastSeparator < 0) -1 else cleaned.length - lastSeparator - 1
-    val usesASingleSeparatorSymbol = cleaned.none { it == '.' } || cleaned.none { it == ',' }
+    val digitsAfterSeparator = if (lastSeparator < 0) 0 else cleaned.length - lastSeparator - 1
+    val mixesBothSeparatorSymbols = cleaned.any { it == '.' } && cleaned.any { it == ',' }
 
     val separatorIsDecimal =
         when {
             lastSeparator < 0 -> false
-            digitsAfterSeparator == 3 && usesASingleSeparatorSymbol -> false
-            else -> true
+            // Símbolos misturados ("1.234,56") só fazem sentido com o último
+            // sendo o decimal — então ele precisa ter as 2 casas, ou a entrada
+            // está malformada.
+            mixesBothSeparatorSymbols -> if (digitsAfterSeparator == 2) true else return null
+            // Exatamente 2 dígitos: é o decimal.
+            digitsAfterSeparator == 2 -> true
+            // Exatamente 3: só pode ser milhar, já que decimal tem sempre 2.
+            digitsAfterSeparator == 3 -> false
+            // Qualquer outra quantidade não é nem uma coisa nem outra.
+            else -> return null
         }
 
     val integerText = if (separatorIsDecimal) cleaned.substring(0, lastSeparator) else cleaned
-    val decimalText = if (separatorIsDecimal) cleaned.substring(lastSeparator + 1) else ""
+    val decimalText = if (separatorIsDecimal) cleaned.substring(lastSeparator + 1) else "00"
 
-    // Depois de escolher o decimal, o que sobrou de separador no lado inteiro
-    // só pode ser agrupamento.
+    // O que sobrou de separador no lado inteiro só pode ser agrupamento.
     val units = integerText.filter { it.isDigit() }.ifEmpty { "0" }.toLongOrNull() ?: return null
-    if (decimalText.length > 2 || decimalText.any { !it.isDigit() }) return null
+    val cents = decimalText.toLongOrNull() ?: return null
 
-    val cents = decimalText.padEnd(2, '0').ifEmpty { "00" }.toLongOrNull() ?: return null
     return units * 100 + cents
 }
