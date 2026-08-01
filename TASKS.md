@@ -23,6 +23,7 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [x] `WalletState` totalizando **por moeda** — somar BRL com USD daria número sem significado, e converter exigiria cotação (rede, proibida pelo SPEC).
 - [x] Tela de lista em Compose: card de totais, linhas ordenadas por renovação, estado vazio. `SubTrackApp` com DI na mão (grafo de 2 objetos não justifica biblioteca).
 - [x] 40 testes no total, `ktlintCheck build` limpo e sem warning.
+- [x] **Rodado em emulador (Pixel 8)**: app sobe sem crash, estado vazio renderiza, e o `subtrack.db` foi criado com 20 KB — ou seja, o `AndroidSqliteDriver` abriu o SQLite do Android e executou o schema de verdade (o estado vazio sozinho não provaria isso, já que o `initial` do `collectAsState` também é vazio).
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.
@@ -37,7 +38,7 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 ## Dívidas registradas (não bloqueiam a Fase 1)
 
-- **App nunca foi executado em device/emulador.** Tudo até aqui é build verde + teste de host. A tela de lista compila e o APK gera, mas ninguém viu a tela rodando. Validar antes de fechar a Fase 1.
+- **`ACCESS_NETWORK_STATE` no manifest, vindo do merge do WorkManager** (junto com `WAKE_LOCK`, `FOREGROUND_SERVICE`, `RECEIVE_BOOT_COMPLETED`). Não há `INTERNET`, então o app continua sem conseguir falar com a rede — o critério do SPEC se mantém. Mas a Play Store expõe essa lista pro usuário, e "nunca toca na rede" é o argumento central do produto. Ao implementar a notificação, avaliar remover `ACCESS_NETWORK_STATE` via `tools:node="remove"` (só é usada por constraint de rede, que não usamos). `RECEIVE_BOOT_COMPLETED` deve ficar — é o que faz o lembrete sobreviver a um reboot.
 - `today` é lido uma vez na composição — se o app ficar aberto atravessando a meia-noite, os rótulos ("Renova em N dias") só atualizam na próxima abertura.
 - Textos da UI estão fixos em português no código, fora de `strings.xml`. Migrar quando/se entrar segundo idioma.
 
