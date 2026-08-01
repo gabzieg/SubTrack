@@ -36,8 +36,10 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.datetime)
+            // api, não implementation: Flow e LocalDate aparecem na API pública
+            // do repositório e do modelo — quem consome :shared precisa deles.
+            api(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.datetime)
             implementation(libs.sqldelight.coroutines.extensions)
         }
         commonTest.dependencies {
