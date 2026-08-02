@@ -1,0 +1,23 @@
+<!--
+  Ícone da barra de status: o Android descarta a cor e usa só o alfa como
+  máscara. Precisa ser silhueta branca em fundo transparente — um ícone colorido
+  vira um quadrado cinza. Por isso não dá pra reaproveitar o do launcher.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+
+    <path
+        android:pathData="M12,6 A6,6 0 1 1 6,12"
+        android:strokeWidth="2"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+
+    <path
+        android:pathData="M9.5,3.5 L14,6 L9.5,8.5 Z"
+        android:fillColor="#FFFFFF" />
+</vector>

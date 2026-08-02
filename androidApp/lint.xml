@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!--
+      O lint sugere fundir mipmap-anydpi-v26 em mipmap-anydpi por o minSdk já
+      ser 26. Testado: o AAPT desta versão não resolve @mipmap/ic_launcher sem o
+      qualificador de versão e o build quebra em processDebugResources. A
+      sugestão está errada pra este setup.
+    -->
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+</lint>

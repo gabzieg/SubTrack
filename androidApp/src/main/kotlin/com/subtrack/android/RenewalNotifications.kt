@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -51,7 +52,7 @@ fun Context.notifyRenewal(reminder: RenewalReminder): Boolean {
     )
 
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-        .setSmallIcon(android.R.drawable.ic_popup_reminder)
+        .setSmallIcon(R.drawable.ic_notification)
         .setContentTitle(reminder.subscriptionName)
         .setContentText(text)
         .setContentIntent(openApp)
@@ -59,9 +60,12 @@ fun Context.notifyRenewal(reminder: RenewalReminder): Boolean {
         .build()
 
     // A checagem é repetida aqui, e não só via canPostNotifications(), porque o
-    // lint não a enxerga através da fronteira da função. O catch cobre a corrida
-    // real: a permissão pode ser revogada entre checar e notificar.
-    if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+    // lint não a enxerga através da fronteira da função. O guard de versão não é
+    // formalidade: POST_NOTIFICATIONS só existe no Android 13, e checá-la em
+    // aparelho mais antigo (minSdk é 26) devolveria negado — o app nunca
+    // notificaria em Android 8 a 12.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
         PackageManager.PERMISSION_GRANTED
     ) {
         return false
@@ -77,5 +81,10 @@ fun Context.notifyRenewal(reminder: RenewalReminder): Boolean {
     }
 }
 
-fun Context.canPostNotifications(): Boolean = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-    PackageManager.PERMISSION_GRANTED
+/**
+ * `areNotificationsEnabled()` em vez de checar a permissão direto: funciona em
+ * todas as versões (a permissão só existe no Android 13+) e ainda pega o caso
+ * que a permissão não pega — o usuário desligando as notificações do app pelos
+ * ajustes do sistema.
+ */
+fun Context.canPostNotifications(): Boolean = NotificationManagerCompat.from(this).areNotificationsEnabled()

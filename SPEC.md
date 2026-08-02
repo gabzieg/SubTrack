@@ -43,11 +43,13 @@ Concorrentes existentes falham em dois extremos: (a) linkam conta bancária (Roc
 
 ## Critério de aceite (MVP)
 
-- [ ] Adicionar, editar, arquivar assinatura funciona e persiste após fechar o app.
-- [ ] Total mensal/anual recalcula corretamente ao adicionar/remover/arquivar.
-- [ ] Notificação dispara na data configurada (testável simulando data do sistema).
-- [ ] Zero chamada de rede em todo o app (auditável — nenhuma permissão de INTERNET no manifest, ou permissão presente mas nenhuma chamada real).
-- [ ] Build de release gera APK instalável sem erro de lint/teste.
+- [x] Adicionar, editar, arquivar assinatura funciona e persiste após fechar o app. *(verificado em emulador, incluindo force-stop e relaunch)*
+- [x] Total mensal/anual recalcula corretamente ao adicionar/remover/arquivar. *(verificado: caiu de R$76,80 pra R$21,90 ao arquivar e voltou ao desarquivar)*
+- [x] Notificação dispara na data configurada. *(verificado: "R$54.90 é cobrado em 3 dias" na gaveta; a que renova em 18 dias não disparou)*
+- [x] Zero chamada de rede em todo o app. *(verificado no `dumpsys` do aparelho: sem `INTERNET`, e `ACCESS_NETWORK_STATE` removida do merge do WorkManager)*
+- [x] Build de release gera APK instalável sem erro de lint/teste. *(`ktlintCheck build` limpo, APK debug e release gerados)*
+
+**Fase 1 fechada em 2026-08-02.**
 
 ## Modelo de monetização (referência, decisão final na Fase 5)
 

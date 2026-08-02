@@ -1,11 +1,12 @@
 # TASKS.md — SubTrack
 
-Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
+Fase atual: **Fase 2 — Diferenciação** (Fase 0 em 2026-07-30, Fase 1 em 2026-08-02)
 
-## Pendente (Fase 1)
+## Pendente (Fase 2 — ver ROADMAP.md)
 
-- [ ] Ícone do app (lint acusa `MissingApplicationIcon`).
-- [ ] Fechar todos os checkboxes de "Critério de aceite (MVP)" no SPEC.md.
+- [ ] Widget de tela inicial: próxima renovação + total do mês.
+- [ ] Export CSV.
+- [ ] Categorização na lista (o campo já é salvo, mas não aparece nem agrupa).
 
 ## Concluído
 
@@ -31,6 +32,10 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [x] Alternar "Ver arquivadas" na barra — sem isso arquivar era porta de mão única, com o botão de desarquivar inalcançável. Arquivada aparece marcada e **não** entra nos totais.
 - [x] **Sobrevivência a reboot verificada** (2026-08-02): emulador reiniciado de verdade; o job periódico voltou agendado (latência de ~23h30, coerente com o ciclo diário) **sem o app ter sido aberto** — nenhuma activity do SubTrack rodando, tela no launcher. O reagendamento é do WorkManager, não do `onCreate`.
 - [x] **Verificado em emulador**: editar prefilled, arquivar (saiu da lista, total caiu de R$76,80 pra R$21,90), listar arquivada, desarquivar (voltou, total restaurado). 66 testes no total.
+
+- [x] **Ícone do app** (2026-08-02): adaptativo (fundo + primeiro plano + monocromático), seta circular = recorrência. Ícone de notificação separado, porque a barra de status descarta a cor e usa só o alfa — um ícone colorido viraria quadrado cinza. **Ambos verificados renderizando no emulador.** Arte é provisória, feita pra destravar; trocar quando houver decisão visual.
+- [x] Bug encontrado pelo lint (`InlinedApi`): `POST_NOTIFICATIONS` só existe no Android 13+, mas o `minSdk` é 26 — checá-la sem guard de versão faria o app **nunca notificar em Android 8 a 12**. `canPostNotifications()` passou a usar `areNotificationsEnabled()`, que funciona em todas as versões e ainda pega o usuário desligando as notificações pelos ajustes.
+- [x] **Fase 1 fechada** — todos os critérios de aceite do SPEC.md marcados.
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.

@@ -1,0 +1,24 @@
+<!--
+  Seta circular = recorrência. Um cifrão leria como "finanças genérico" e só
+  faz sentido em moedas que usam esse símbolo.
+
+  Ícone adaptativo: viewport de 108dp, conteúdo dentro dos 66dp centrais para
+  não ser cortado pelas máscaras (círculo, squircle) que cada launcher aplica.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:pathData="M54,32 A22,22 0 1 1 32,54"
+        android:strokeWidth="7"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+
+    <path
+        android:pathData="M46,24 L60,32 L46,40 Z"
+        android:fillColor="#FFFFFF" />
+</vector>
