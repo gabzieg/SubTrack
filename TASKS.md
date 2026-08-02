@@ -6,7 +6,6 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 - [ ] Tela de adicionar/editar assinatura (nome, valor, moeda, ciclo, everyN, data, categoria, dias de aviso).
 - [ ] Arquivar/desarquivar sem apagar histórico.
-- [ ] Agendamento de notificação via WorkManager + permissão POST_NOTIFICATIONS em runtime (Android 13+).
 - [ ] Ícone do app (lint acusa `MissingApplicationIcon`).
 - [ ] Fechar todos os checkboxes de "Critério de aceite (MVP)" no SPEC.md.
 
@@ -24,6 +23,11 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [x] Tela de lista em Compose: card de totais, linhas ordenadas por renovação, estado vazio. `SubTrackApp` com DI na mão (grafo de 2 objetos não justifica biblioteca).
 - [x] 40 testes no total, `ktlintCheck build` limpo e sem warning.
 - [x] **Rodado em emulador (Pixel 8)**: app sobe sem crash, estado vazio renderiza, e o `subtrack.db` foi criado com 20 KB — ou seja, o `AndroidSqliteDriver` abriu o SQLite do Android e executou o schema de verdade (o estado vazio sozinho não provaria isso, já que o `initial` do `collectAsState` também é vazio).
+
+- [x] **Notificação de renovação** (2026-08-02): lógica pura de "quais avisar" com 11 testes, `lastNotifiedRenewal` no schema pra dedup, worker diário via WorkManager, permissão `POST_NOTIFICATIONS` em runtime. 63 testes no total.
+- [x] `ACCESS_NETWORK_STATE` removida via `tools:node="remove"` — confirmado no manifesto final e no `dumpsys` do aparelho. Restam só `POST_NOTIFICATIONS`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `RECEIVE_BOOT_COMPLETED`. Dívida fechada.
+- [x] Execução imediata na abertura do app, além da periódica — sem isso a primeira checagem só aconteceria 24h após instalar.
+- [x] **Verificado em emulador**: assinatura renovando em 3 dias notificou ("R$54.90 é cobrado em 3 dias"); a que renova em 18 dias não notificou; reabrir o app rodou o worker de novo (confirmado no log) sem repetir o aviso.
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.
@@ -44,6 +48,8 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - `today` é lido uma vez na composição — se o app ficar aberto atravessando a meia-noite, os rótulos ("Renova em N dias") só atualizam na próxima abertura.
 - Textos da UI estão fixos em português no código, fora de `strings.xml`. Migrar quando/se entrar segundo idioma.
 
+- **Ícone da notificação é `android.R.drawable.ic_popup_reminder`**, do sistema. Trocar junto com o ícone do app.
+- **Não testado: sobrevivência a reboot.** `RECEIVE_BOOT_COMPLETED` está no manifesto e o WorkManager reagenda sozinho, mas não reiniciei o emulador pra confirmar. Vale validar antes de publicar.
 - `targetSdk = 36` — lint acusa `OldTargetApi`. Subir junto com `compileSdk` quando a plataforma mais nova estiver instalada e testada.
 - Alvos Apple ainda não declarados no `shared`. **Restrição dura:** compilar alvo Apple exige macOS — no Windows não dá pra validar o caminho iOS localmente. A Fase 4 vai precisar de um Mac ou de um runner macOS no CI. A estrutura `commonMain` já está preparada, mas isso não é o mesmo que estar verificado.
 
