@@ -3,6 +3,8 @@ package com.subtrack.android
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -52,17 +54,30 @@ class RenewalReminderWorker(
     }
 
     companion object {
-        private const val WORK_NAME = "renewal-reminders"
+        private const val PERIODIC_WORK_NAME = "renewal-reminders"
+        private const val IMMEDIATE_WORK_NAME = "renewal-reminders-now"
 
         fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<RenewalReminderWorker>(1, TimeUnit.DAYS).build()
+            val workManager = WorkManager.getInstance(context)
 
-            // KEEP: reagendar a cada abertura do app reiniciaria o intervalo e,
-            // num app aberto todo dia, o worker poderia nunca chegar a rodar.
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
+            // O trabalho periódico só executa quando o primeiro intervalo fecha
+            // — ou seja, nas primeiras 24h depois de instalar o app ele não
+            // roda uma única vez. Quem instalasse hoje com cobrança amanhã
+            // ficaria sem aviso. Esta execução imediata cobre essa janela, e
+            // repeti-la a cada abertura é inofensivo porque um aviso já enviado
+            // não é reenviado (ver lastNotifiedRenewal).
+            workManager.enqueueUniqueWork(
+                IMMEDIATE_WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<RenewalReminderWorker>().build(),
+            )
+
+            // KEEP: reagendar a cada abertura reiniciaria o intervalo e, num app
+            // aberto todo dia, o periódico poderia nunca chegar a rodar.
+            workManager.enqueueUniquePeriodicWork(
+                PERIODIC_WORK_NAME,
                 ExistingPeriodicWorkPolicy.KEEP,
-                request,
+                PeriodicWorkRequestBuilder<RenewalReminderWorker>(1, TimeUnit.DAYS).build(),
             )
         }
     }
