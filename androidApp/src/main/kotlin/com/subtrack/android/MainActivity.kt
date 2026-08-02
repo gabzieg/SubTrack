@@ -2,9 +2,11 @@ package com.subtrack.android
 
 import android.Manifest
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +15,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -28,9 +32,14 @@ import androidx.compose.ui.platform.LocalContext
 import com.subtrack.shared.Subscription
 import com.subtrack.shared.SubscriptionRepository
 import com.subtrack.shared.WalletState
+import com.subtrack.shared.csvFileName
 import com.subtrack.shared.observeWallet
+import com.subtrack.shared.toCsv
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -81,6 +90,29 @@ private fun CoroutineScope.mutateAndRefreshWidget(
     }
 }
 
+/**
+ * Grava o CSV no arquivo que o usuário escolheu.
+ *
+ * Via Storage Access Framework: o usuário aponta onde salvar e o app recebe
+ * acesso só àquele arquivo. Não exige permissão de armazenamento, e o dado não
+ * passa por lugar nenhum além do destino escolhido.
+ */
+private suspend fun writeCsv(
+    context: Context,
+    repository: SubscriptionRepository,
+    today: LocalDate,
+    destination: Uri,
+): Boolean = withContext(Dispatchers.IO) {
+    runCatching {
+        // observeAll: o export inclui arquivadas — backup que descarta
+        // histórico não é backup.
+        val csv = repository.observeAll(today).first().toCsv()
+        context.contentResolver.openOutputStream(destination)?.use { output ->
+            output.write(csv.toByteArray(Charsets.UTF_8))
+        } ?: error("Não foi possível abrir $destination para escrita")
+    }.isSuccess
+}
+
 private sealed interface Screen {
     data object Wallet : Screen
 
@@ -99,6 +131,20 @@ private fun SubTrackRoot(
     var showArchived by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val exportCsv = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { destination ->
+        // destination é null quando o usuário cancela o seletor.
+        if (destination == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val ok = writeCsv(context, repository, today, destination)
+            snackbarHostState.showSnackbar(
+                if (ok) "Assinaturas exportadas" else "Não foi possível exportar",
+            )
+        }
+    }
     val state by remember(today, showArchived) { repository.observeWallet(today, showArchived) }
         .collectAsState(initial = WalletState())
 
@@ -155,15 +201,19 @@ private fun SubTrackRoot(
                     TopAppBar(
                         title = { Text("SubTrack") },
                         actions = {
+                            TextButton(onClick = { exportCsv.launch(csvFileName(today)) }) {
+                                Text("Exportar")
+                            }
                             // Sem isto, arquivar seria porta de mão única: a
                             // arquivada some da lista e o botão de desarquivar
                             // fica inalcançável.
                             TextButton(onClick = { showArchived = !showArchived }) {
-                                Text(if (showArchived) "Ocultar arquivadas" else "Ver arquivadas")
+                                Text(if (showArchived) "Ocultar" else "Arquivadas")
                             }
                         },
                     )
                 },
+                snackbarHost = { SnackbarHost(snackbarHostState) },
                 floatingActionButton = {
                     FloatingActionButton(onClick = { screen = Screen.Adding }) {
                         Text("+")
