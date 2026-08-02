@@ -28,6 +28,10 @@ Leia sob demanda, não de cara:
 - [TASKS.md](TASKS.md) — **onde o trabalho está agora** + dívidas registradas.
 - [.agents/skills/kotlin-multiplatform-compose.md](.agents/skills/kotlin-multiplatform-compose.md)
   — carregue antes de mexer em estrutura de módulo, SQLDelight ou build KMP/iOS.
+- [docs/DECISOES.md](docs/DECISOES.md) — **por que não fizemos do outro jeito.**
+  Log cronológico: alternativas descartadas, correções de rumo, bugs que os
+  testes não pegaram, e o que está verificado vs. apenas assumido. Leia antes de
+  propor mudar uma decisão que parece estranha.
 
 ## Comandos
 
