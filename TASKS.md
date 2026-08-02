@@ -29,6 +29,7 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 - [x] **Editar / arquivar / desarquivar / excluir pela UI** (2026-08-02): mesma tela serve cadastro e edição, agora com `everyN`, dias de aviso e categoria. Toque na linha abre a edição. Excluir pede confirmação; arquivar é a saída padrão.
 - [x] Alternar "Ver arquivadas" na barra — sem isso arquivar era porta de mão única, com o botão de desarquivar inalcançável. Arquivada aparece marcada e **não** entra nos totais.
+- [x] **Sobrevivência a reboot verificada** (2026-08-02): emulador reiniciado de verdade; o job periódico voltou agendado (latência de ~23h30, coerente com o ciclo diário) **sem o app ter sido aberto** — nenhuma activity do SubTrack rodando, tela no launcher. O reagendamento é do WorkManager, não do `onCreate`.
 - [x] **Verificado em emulador**: editar prefilled, arquivar (saiu da lista, total caiu de R$76,80 pra R$21,90), listar arquivada, desarquivar (voltou, total restaurado). 66 testes no total.
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
@@ -51,7 +52,6 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - Textos da UI estão fixos em português no código, fora de `strings.xml`. Migrar quando/se entrar segundo idioma.
 
 - **Ícone da notificação é `android.R.drawable.ic_popup_reminder`**, do sistema. Trocar junto com o ícone do app.
-- **Não testado: sobrevivência a reboot.** `RECEIVE_BOOT_COMPLETED` está no manifesto e o WorkManager reagenda sozinho, mas não reiniciei o emulador pra confirmar. Vale validar antes de publicar.
 - `targetSdk = 36` — lint acusa `OldTargetApi`. Subir junto com `compileSdk` quando a plataforma mais nova estiver instalada e testada.
 - Alvos Apple ainda não declarados no `shared`. **Restrição dura:** compilar alvo Apple exige macOS — no Windows não dá pra validar o caminho iOS localmente. A Fase 4 vai precisar de um Mac ou de um runner macOS no CI. A estrutura `commonMain` já está preparada, mas isso não é o mesmo que estar verificado.
 
