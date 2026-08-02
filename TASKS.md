@@ -4,11 +4,14 @@ Fase atual: **Fase 2 — Diferenciação** (Fase 0 em 2026-07-30, Fase 1 em 2026
 
 ## Pendente (Fase 2 — ver ROADMAP.md)
 
-- [ ] Widget de tela inicial: próxima renovação + total do mês.
 - [ ] Export CSV.
 - [ ] Categorização na lista (o campo já é salvo, mas não aparece nem agrupa).
 
 ## Concluído
+
+### Fase 2 — em andamento
+- [x] **Widget de tela inicial** (2026-08-02): total mensal + próxima renovação. `RemoteViews`, não Glance (texto puro não justifica dependência nova). `updatePeriodMillis=0` — atualizado por quem sabe que mudou (worker diário pra virada do dia, edições no app pro resto), em vez de acordar o aparelho a cada 30min. Múltiplas moedas: mostra a de maior gasto anual e sinaliza que há outras, senão o número seria lido como total.
+- [x] **Verificado em emulador**: widget colocado na home mostrando dado real; adicionar assinatura levou de R$10,00 pra R$35,00 e trocou a próxima renovação. 71 testes.
 
 ### Fase 1 — em andamento
 - [x] `kotlinx-datetime` 0.8.0 aprovado e adicionado (matemática de calendário pra ciclo mensal/anual).
