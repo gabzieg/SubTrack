@@ -154,6 +154,33 @@ class RenewalReminderTest {
     }
 
     @Test
+    fun movingTheChargeDateMakesTheReminderCountAgain() = runTest {
+        // Guardar QUAL renovação foi avisada, e não um "já avisei", é o que faz
+        // isto se resolver sozinho: editar a data muda a próxima renovação, e o
+        // aviso volta a valer sem precisar limpar nada na edição.
+        val id = add("Netflix", anchor = "2026-01-04", notifyDaysBefore = 3)
+        repository.markNotified(id, reminders().single().renewalDate)
+        assertTrue(reminders().dueOn(today).isEmpty())
+
+        val stored = repository.findById(id)!!
+        repository.update(stored.copy(anchor = LocalDate.parse("2026-01-02")))
+
+        assertEquals(LocalDate.parse("2026-08-02"), reminders().single().renewalDate)
+        assertEquals(listOf("Netflix"), reminders().dueOn(today).map { it.subscriptionName })
+    }
+
+    @Test
+    fun changingOnlyTheAmountDoesNotAnnounceTheSameChargeTwice() = runTest {
+        val id = add("Netflix", anchor = "2026-01-04", notifyDaysBefore = 3)
+        repository.markNotified(id, reminders().single().renewalDate)
+
+        val stored = repository.findById(id)!!
+        repository.update(stored.copy(amountCents = 9990))
+
+        assertTrue(reminders().dueOn(today).isEmpty())
+    }
+
+    @Test
     fun yearlySubscriptionsAreRemindedTooNotJustMonthlyOnes() = runTest {
         add("Anual", anchor = "2025-09-10", cycle = BillingCycle.YEARLY, notifyDaysBefore = 5)
 

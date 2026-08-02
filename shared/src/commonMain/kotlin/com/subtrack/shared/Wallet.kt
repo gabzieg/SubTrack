@@ -25,8 +25,22 @@ data class WalletState(
     val isEmpty: Boolean get() = upcoming.isEmpty()
 }
 
-fun SubscriptionRepository.observeWallet(today: LocalDate): Flow<WalletState> = observeActive(today).map { upcoming ->
-    WalletState(upcoming = upcoming, totals = upcoming.totalsByCurrency())
+/**
+ * @param includeArchived quando true, a lista traz também as arquivadas. Os
+ *   totais continuam contando só as ativas: arquivada é assinatura que não é
+ *   mais paga, então somá-la mentiria sobre o gasto.
+ */
+fun SubscriptionRepository.observeWallet(
+    today: LocalDate,
+    includeArchived: Boolean = false,
+): Flow<WalletState> {
+    val source = if (includeArchived) observeAll(today) else observeActive(today)
+    return source.map { upcoming ->
+        WalletState(
+            upcoming = upcoming,
+            totals = upcoming.filterNot { it.subscription.archived }.totalsByCurrency(),
+        )
+    }
 }
 
 internal fun List<UpcomingSubscription>.totalsByCurrency(): List<WalletTotals> = groupBy { it.subscription.currency }

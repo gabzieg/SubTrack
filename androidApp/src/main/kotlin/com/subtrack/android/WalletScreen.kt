@@ -1,5 +1,6 @@
 package com.subtrack.android
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.subtrack.shared.Subscription
 import com.subtrack.shared.UpcomingSubscription
 import com.subtrack.shared.WalletState
 import com.subtrack.shared.WalletTotals
@@ -28,6 +30,7 @@ import kotlinx.datetime.daysUntil
 fun WalletScreen(
     state: WalletState,
     today: LocalDate,
+    onSubscriptionClick: (Subscription) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.isEmpty) {
@@ -42,7 +45,11 @@ fun WalletScreen(
     ) {
         item { TotalsCard(state.totals) }
         items(state.upcoming, key = { it.subscription.id }) { upcoming ->
-            SubscriptionRow(upcoming = upcoming, today = today)
+            SubscriptionRow(
+                upcoming = upcoming,
+                today = today,
+                onClick = { onSubscriptionClick(upcoming.subscription) },
+            )
         }
     }
 }
@@ -100,18 +107,25 @@ private fun TotalsCard(
 private fun SubscriptionRow(
     upcoming: UpcomingSubscription,
     today: LocalDate,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val subscription = upcoming.subscription
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.padding(end = 12.dp)) {
             Text(text = subscription.name, style = MaterialTheme.typography.titleMedium)
             Text(
-                text = renewalLabel(upcoming.nextRenewal, today),
+                // Arquivada não tem próxima renovação a anunciar — dizer
+                // "renova em N dias" numa assinatura cancelada seria mentira.
+                text = if (subscription.archived) {
+                    "Arquivada"
+                } else {
+                    renewalLabel(upcoming.nextRenewal, today)
+                },
                 style = MaterialTheme.typography.bodySmall,
             )
         }

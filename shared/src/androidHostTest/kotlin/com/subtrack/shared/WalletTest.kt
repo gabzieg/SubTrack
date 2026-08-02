@@ -108,6 +108,23 @@ class WalletTest {
     }
 
     @Test
+    fun archivedSubscriptionsCanBeListedWithoutCountingTowardsTotals() = runTest {
+        // Sem poder listar as arquivadas, arquivar viraria porta de mão única —
+        // o botão de desarquivar existiria mas seria inalcançável. Mesmo
+        // visíveis, elas não entram no total: não são mais pagas.
+        val id = add("Cancelada", 9900)
+        add("Ativa", 1000)
+        repository.setArchived(id, archived = true)
+
+        val state = repository.observeWallet(today, includeArchived = true).first()
+        assertEquals(listOf("Ativa", "Cancelada"), state.upcoming.map { it.subscription.name }.sorted())
+        assertEquals(
+            listOf(WalletTotals(currencyCode = "BRL", monthlyCents = 1000, yearlyCents = 12000)),
+            state.totals,
+        )
+    }
+
+    @Test
     fun walletKeepsTheRenewalOrderFromTheRepository() = runTest {
         repository.add(
             SubscriptionDraft(name = "Depois", amountCents = 100, currency = "BRL", cycle = BillingCycle.MONTHLY, anchor = LocalDate.parse("2026-01-25")),
