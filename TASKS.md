@@ -4,8 +4,6 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 
 ## Pendente (Fase 1)
 
-- [ ] Tela de adicionar/editar assinatura (nome, valor, moeda, ciclo, everyN, data, categoria, dias de aviso).
-- [ ] Arquivar/desarquivar sem apagar histórico.
 - [ ] Ícone do app (lint acusa `MissingApplicationIcon`).
 - [ ] Fechar todos os checkboxes de "Critério de aceite (MVP)" no SPEC.md.
 
@@ -28,6 +26,10 @@ Fase atual: **Fase 1 — MVP** (Fase 0 concluída em 2026-07-30)
 - [x] `ACCESS_NETWORK_STATE` removida via `tools:node="remove"` — confirmado no manifesto final e no `dumpsys` do aparelho. Restam só `POST_NOTIFICATIONS`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `RECEIVE_BOOT_COMPLETED`. Dívida fechada.
 - [x] Execução imediata na abertura do app, além da periódica — sem isso a primeira checagem só aconteceria 24h após instalar.
 - [x] **Verificado em emulador**: assinatura renovando em 3 dias notificou ("R$54.90 é cobrado em 3 dias"); a que renova em 18 dias não notificou; reabrir o app rodou o worker de novo (confirmado no log) sem repetir o aviso.
+
+- [x] **Editar / arquivar / desarquivar / excluir pela UI** (2026-08-02): mesma tela serve cadastro e edição, agora com `everyN`, dias de aviso e categoria. Toque na linha abre a edição. Excluir pede confirmação; arquivar é a saída padrão.
+- [x] Alternar "Ver arquivadas" na barra — sem isso arquivar era porta de mão única, com o botão de desarquivar inalcançável. Arquivada aparece marcada e **não** entra nos totais.
+- [x] **Verificado em emulador**: editar prefilled, arquivar (saiu da lista, total caiu de R$76,80 pra R$21,90), listar arquivada, desarquivar (voltou, total restaurado). 66 testes no total.
 
 ### Fase 0 — Global Setup ✅ (2026-07-30)
 - [x] Versões confirmadas empiricamente rodando build de verdade: AGP 9.3.1, Kotlin 2.3.21, Gradle 9.6.1, SQLDelight 2.3.2, Compose BOM 2026.06.01, JDK 17.
