@@ -17,6 +17,8 @@ data class Subscription(
     val category: String?,
     val notifyDaysBefore: Int,
     val archived: Boolean,
+    /** Renovação da qual o usuário já foi avisado, se houve alguma. */
+    val lastNotifiedRenewal: LocalDate? = null,
 )
 
 /** Assinatura ainda sem id, na forma que a tela de cadastro produz. */

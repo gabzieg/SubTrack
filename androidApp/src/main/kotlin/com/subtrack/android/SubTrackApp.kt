@@ -15,4 +15,10 @@ class SubTrackApp : Application() {
         val driver = DatabaseDriverFactory(applicationContext).create()
         SubscriptionRepository(SubTrackDatabase(driver), Dispatchers.IO)
     }
+
+    override fun onCreate() {
+        super.onCreate()
+        ensureRenewalChannel()
+        RenewalReminderWorker.schedule(this)
+    }
 }

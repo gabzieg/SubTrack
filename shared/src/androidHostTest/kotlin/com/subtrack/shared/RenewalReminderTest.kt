@@ -113,6 +113,47 @@ class RenewalReminderTest {
     }
 
     @Test
+    fun aReminderIsDueOnceItsDayArrives() = runTest {
+        add("Netflix", anchor = "2026-01-04", notifyDaysBefore = 3)
+
+        // Renova 04/08, avisa 01/08 — que é hoje.
+        assertEquals(listOf("Netflix"), reminders().dueOn(today).map { it.subscriptionName })
+    }
+
+    @Test
+    fun aReminderIsNotDueBeforeItsDay() = runTest {
+        add("Longe", anchor = "2026-01-20", notifyDaysBefore = 3)
+
+        // Avisa só em 17/08; hoje é 01/08.
+        assertTrue(reminders().dueOn(today).isEmpty())
+    }
+
+    @Test
+    fun theSameRenewalIsNotAnnouncedTwice() = runTest {
+        // Sem isto o worker diário viraria spam: um aviso de 3 dias antes
+        // dispararia 3 vezes, e um atrasado dispararia todo dia até a cobrança.
+        val id = add("Netflix", anchor = "2026-01-04", notifyDaysBefore = 3)
+        val renewal = reminders().single().renewalDate
+
+        repository.markNotified(id, renewal)
+
+        assertTrue(reminders().dueOn(today).isEmpty())
+        assertTrue(reminders().single().alreadyNotified)
+    }
+
+    @Test
+    fun theNextRenewalIsAnnouncedEvenAfterThePreviousOneWas() = runTest {
+        // Avisar de agosto não pode calar o aviso de setembro.
+        val id = add("Netflix", anchor = "2026-01-04", notifyDaysBefore = 3)
+        repository.markNotified(id, LocalDate.parse("2026-07-04"))
+
+        val reminder = reminders().single()
+        assertEquals(LocalDate.parse("2026-08-04"), reminder.renewalDate)
+        assertTrue(!reminder.alreadyNotified)
+        assertEquals(listOf("Netflix"), reminders().dueOn(today).map { it.subscriptionName })
+    }
+
+    @Test
     fun yearlySubscriptionsAreRemindedTooNotJustMonthlyOnes() = runTest {
         add("Anual", anchor = "2025-09-10", cycle = BillingCycle.YEARLY, notifyDaysBefore = 5)
 

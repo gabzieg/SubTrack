@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Sem android.permission.INTERNET por decisão de produto: nenhum dado sai
          do dispositivo (ver SPEC.md, critério de aceite). A ausência desta
          permissão é auditável por qualquer usuário na própria Play Store. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- O WorkManager injeta ACCESS_NETWORK_STATE pelo merge do manifesto, mas
+         ela só serve pra constraint de rede, que não usamos. Removida porque a
+         Play Store mostra essa lista ao usuário, e "nunca toca na rede" é a
+         proposta central do app. RECEIVE_BOOT_COMPLETED fica: é ela que faz o
+         lembrete sobreviver a um reboot. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
 
     <application
         android:name=".SubTrackApp"

@@ -14,9 +14,19 @@ data class RenewalReminder(
     val currency: String,
     val renewalDate: LocalDate,
     val remindOn: LocalDate,
+    val alreadyNotified: Boolean,
 ) {
     val daysBeforeRenewal: Int get() = remindOn.daysUntil(renewalDate)
 }
+
+/**
+ * Os avisos que devem sair em [date].
+ *
+ * Filtrar por já-avisado é o que deixa o worker rodar todos os dias sem virar
+ * spam: sem isso, um aviso de 3 dias antes dispararia 3 vezes, e um aviso
+ * atrasado dispararia todo dia até a cobrança.
+ */
+fun List<RenewalReminder>.dueOn(date: LocalDate): List<RenewalReminder> = filter { !it.alreadyNotified && it.remindOn <= date }
 
 /**
  * Decide quais avisos existem a partir de [from].
@@ -39,6 +49,7 @@ fun List<UpcomingSubscription>.remindersOnOrAfter(from: LocalDate): List<Renewal
         currency = subscription.currency,
         renewalDate = upcoming.nextRenewal,
         remindOn = if (naturalRemindOn < from) from else naturalRemindOn,
+        alreadyNotified = subscription.lastNotifiedRenewal == upcoming.nextRenewal,
     )
 }.sortedWith(compareBy({ it.remindOn }, { it.subscriptionName }))
 

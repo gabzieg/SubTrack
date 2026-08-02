@@ -1,8 +1,11 @@
 package com.subtrack.android
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,10 +34,20 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class MainActivity : ComponentActivity() {
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val repository = (application as SubTrackApp).repository
+
+        // Android 13+ exige permissão em runtime pra notificar. Sem ela o app
+        // ainda funciona como lista — por isso o pedido não bloqueia a tela, e
+        // negar não impede o uso.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !canPostNotifications()) {
+            requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         setContent {
             // A data de hoje é lida uma vez por composição da tela. Se o app

@@ -71,6 +71,17 @@ class SubscriptionRepository(
         queries.setArchived(archived = if (archived) 1L else 0L, id = id)
     }
 
+    /**
+     * Registra que o usuário já foi avisado desta renovação, pro worker diário
+     * não repetir o mesmo aviso amanhã.
+     */
+    suspend fun markNotified(
+        id: Long,
+        renewal: LocalDate,
+    ): Unit = withContext(dispatcher) {
+        queries.markNotified(lastNotifiedRenewalEpochDay = renewal.toEpochDays(), id = id)
+    }
+
     suspend fun delete(id: Long): Unit = withContext(dispatcher) {
         queries.deleteById(id)
     }
@@ -98,4 +109,5 @@ private fun SubscriptionRow.toDomain(): Subscription = Subscription(
     category = category,
     notifyDaysBefore = notifyDaysBefore.toInt(),
     archived = archived != 0L,
+    lastNotifiedRenewal = lastNotifiedRenewalEpochDay?.let { LocalDate.fromEpochDays(it) },
 )

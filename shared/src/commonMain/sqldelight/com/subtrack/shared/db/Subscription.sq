@@ -14,7 +14,11 @@ CREATE TABLE subscription (
     anchorEpochDay INTEGER NOT NULL,
     category TEXT,
     notifyDaysBefore INTEGER NOT NULL DEFAULT 3,
-    archived INTEGER NOT NULL DEFAULT 0
+    archived INTEGER NOT NULL DEFAULT 0,
+    -- Guarda QUAL renovação já foi avisada, não quando o aviso saiu. É o que
+    -- permite o worker rodar todo dia sem repetir o mesmo aviso: se este valor
+    -- já é a próxima renovação, o usuário foi avisado dela.
+    lastNotifiedRenewalEpochDay INTEGER
 );
 
 selectActive:
@@ -27,13 +31,16 @@ selectById:
 SELECT * FROM subscription WHERE id = ?;
 
 insert:
-INSERT INTO subscription (name, amountCents, currency, cycle, cycleEveryN, anchorEpochDay, category, notifyDaysBefore, archived)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO subscription (name, amountCents, currency, cycle, cycleEveryN, anchorEpochDay, category, notifyDaysBefore, archived, lastNotifiedRenewalEpochDay)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL);
 
 update:
 UPDATE subscription
 SET name = ?, amountCents = ?, currency = ?, cycle = ?, cycleEveryN = ?, anchorEpochDay = ?, category = ?, notifyDaysBefore = ?, archived = ?
 WHERE id = ?;
+
+markNotified:
+UPDATE subscription SET lastNotifiedRenewalEpochDay = ? WHERE id = ?;
 
 lastInsertedId:
 SELECT last_insert_rowid();
