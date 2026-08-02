@@ -50,6 +50,11 @@ class RenewalReminderWorker(
             }
         }
 
+        // O texto do widget ("renova em N dias") envelhece com a virada do dia,
+        // não só com edição. Esta execução diária é o que o mantém correto sem
+        // precisar acordar o aparelho por conta própria.
+        SubTrackWidget.refresh(applicationContext)
+
         return Result.success()
     }
 

@@ -1,6 +1,7 @@
 package com.subtrack.android
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,10 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.subtrack.shared.Subscription
 import com.subtrack.shared.SubscriptionRepository
 import com.subtrack.shared.WalletState
 import com.subtrack.shared.observeWallet
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -64,6 +67,20 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Toda mutação passa por aqui pra que o widget nunca fique mostrando um total
+ * que a lista já corrigiu.
+ */
+private fun CoroutineScope.mutateAndRefreshWidget(
+    context: Context,
+    block: suspend () -> Unit,
+) {
+    launch {
+        block()
+        SubTrackWidget.refresh(context)
+    }
+}
+
 private sealed interface Screen {
     data object Wallet : Screen
 
@@ -81,6 +98,7 @@ private fun SubTrackRoot(
     var screen: Screen by remember { mutableStateOf(Screen.Wallet) }
     var showArchived by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val state by remember(today, showArchived) { repository.observeWallet(today, showArchived) }
         .collectAsState(initial = WalletState())
 
@@ -92,7 +110,7 @@ private fun SubTrackRoot(
                 editing = editing,
                 onCancel = { screen = Screen.Wallet },
                 onSave = { draft ->
-                    scope.launch {
+                    scope.mutateAndRefreshWidget(context) {
                         if (editing == null) {
                             repository.add(draft)
                         } else {
@@ -119,11 +137,13 @@ private fun SubTrackRoot(
                     screen = Screen.Wallet
                 },
                 onArchiveToggle = { subscription ->
-                    scope.launch { repository.setArchived(subscription.id, !subscription.archived) }
+                    scope.mutateAndRefreshWidget(context) {
+                        repository.setArchived(subscription.id, !subscription.archived)
+                    }
                     screen = Screen.Wallet
                 },
                 onDelete = { subscription ->
-                    scope.launch { repository.delete(subscription.id) }
+                    scope.mutateAndRefreshWidget(context) { repository.delete(subscription.id) }
                     screen = Screen.Wallet
                 },
             )

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SubTrack</string>
+    <string name="widget_description">Gasto mensal com assinaturas e a próxima renovação</string>
 </resources>
