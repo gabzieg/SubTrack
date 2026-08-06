@@ -8,8 +8,13 @@ Fase atual: **Fase 2 — Diferenciação** (Fase 0 em 2026-07-30, Fase 1 em 2026
 
 ## Concluído
 
-### Fase 3 — em andamento
+### Fase 3 — concluída
 - [x] **Import de CSV (Roundtrip e Genérico)** (2026-08-06): Parser RFC 4180 robusto com suporte a aspas, CRLF e vírgulas internas. Duas modalidades: (1) detecção automática do formato SubTrack para import direto (restaurando backup exato); (2) tela `ImportScreen` para mapeamento manual de colunas de CSVs genéricos (planilhas, outros apps). Linhas inválidas reportadas num Snackbar. 20 novos testes (`CsvImportTest.kt`) garantindo segurança de parse e lógica de mapeamento.
+- [x] **Monetização e Paywall (Mock)** (2026-08-06): 
+  - Regra de limite de 5 assinaturas ativas para contas grátis (arquivadas não contam).
+  - Bloqueio da funcionalidade de Export/Import e Widget para contas grátis.
+  - Tela `PaywallScreen` desenhada com benefícios claros, preço transparente e cláusulas amigáveis de não-recorrência.
+  - Tabela SQLDelight `Settings.sq` e `PremiumRepository` persistindo estado simulado de compra no próprio aparelho.
 
 ### Fase 2 — concluída (pendente ação manual no repositório)
 - [x] **Workflow hardening** (2026-08-05): fechando lacunas identificadas na análise vs. Chris Titus AI workflow:

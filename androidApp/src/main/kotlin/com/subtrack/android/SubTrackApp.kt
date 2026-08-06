@@ -11,9 +11,17 @@ import kotlinx.coroutines.Dispatchers
  * uma biblioteca de DI pra isso custaria mais manutenção do que resolve.
  */
 class SubTrackApp : Application() {
-    val repository: SubscriptionRepository by lazy {
+    private val database: SubTrackDatabase by lazy {
         val driver = DatabaseDriverFactory(applicationContext).create()
-        SubscriptionRepository(SubTrackDatabase(driver), Dispatchers.IO)
+        SubTrackDatabase(driver)
+    }
+
+    val repository: SubscriptionRepository by lazy {
+        SubscriptionRepository(database, Dispatchers.IO)
+    }
+
+    val premiumRepository: com.subtrack.shared.PremiumRepository by lazy {
+        com.subtrack.shared.PremiumRepository(database, Dispatchers.IO)
     }
 
     override fun onCreate() {

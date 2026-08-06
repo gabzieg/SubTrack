@@ -53,9 +53,12 @@ class SubTrackWidget : AppWidgetProvider() {
 
             scope.launch {
                 val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                val repository = (appContext as SubTrackApp).repository
+                val app = appContext as SubTrackApp
+                val repository = app.repository
+                val premiumRepository = app.premiumRepository
+                val isPremium = premiumRepository.isPremium()
                 val summary = repository.observeWallet(today).first().toWidgetSummary()
-                val views = render(appContext, summary, today)
+                val views = render(appContext, summary, today, isPremium)
                 ids.forEach { manager.updateAppWidget(it, views) }
             }
         }
@@ -64,10 +67,15 @@ class SubTrackWidget : AppWidgetProvider() {
             context: Context,
             summary: WidgetSummary,
             today: LocalDate,
+            isPremium: Boolean,
         ): RemoteViews {
             val views = RemoteViews(context.packageName, R.layout.widget_subtrack)
 
-            if (summary.isEmpty) {
+            if (!isPremium) {
+                views.setTextViewText(R.id.widget_total, "SubTrack Pro")
+                views.setTextViewText(R.id.widget_total_label, "Desbloqueie o widget no app")
+                views.setTextViewText(R.id.widget_next, "")
+            } else if (summary.isEmpty) {
                 views.setTextViewText(R.id.widget_total, "—")
                 views.setTextViewText(R.id.widget_total_label, "Nenhuma assinatura")
                 views.setTextViewText(R.id.widget_next, "")

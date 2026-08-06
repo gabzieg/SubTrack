@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Regras para Android 12+. Separa dois cenários que antes eram um só:
+
+  cloud-backup      — backup pro Drive do usuário, restaurado ao reinstalar.
+  device-transfer   — cópia direta de aparelho pra aparelho na migração.
+
+  Ambos incluem o banco pelo mesmo motivo: sem isso, desinstalar ou trocar de
+  celular apagaria a carteira inteira. O journal fica de fora nos dois (ver
+  backup_rules.xml).
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include
+            domain="database"
+            path="subtrack.db" />
+        <exclude
+            domain="database"
+            path="subtrack.db-journal" />
+        <exclude
+            domain="database"
+            path="subtrack.db-wal" />
+        <exclude
+            domain="database"
+            path="subtrack.db-shm" />
+    </cloud-backup>
+
+    <device-transfer>
+        <include
+            domain="database"
+            path="subtrack.db" />
+        <exclude
+            domain="database"
+            path="subtrack.db-journal" />
+        <exclude
+            domain="database"
+            path="subtrack.db-wal" />
+        <exclude
+            domain="database"
+            path="subtrack.db-shm" />
+    </device-transfer>
+</data-extraction-rules>

@@ -73,7 +73,11 @@ class MainActivity : ComponentActivity() {
             val today = remember { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
 
             MaterialTheme {
-                SubTrackRoot(repository = repository, today = today)
+                SubTrackRoot(
+                    repository = repository,
+                    premiumRepository = (application as SubTrackApp).premiumRepository,
+                    today = today,
+                )
             }
         }
     }
@@ -124,12 +128,15 @@ private sealed interface Screen {
     data class Editing(val subscription: Subscription) : Screen
 
     data class Importing(val rows: List<List<String>>) : Screen
+
+    data object Paywall : Screen
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SubTrackRoot(
     repository: SubscriptionRepository,
+    premiumRepository: com.subtrack.shared.PremiumRepository,
     today: LocalDate,
 ) {
     var screen: Screen by remember { mutableStateOf(Screen.Wallet) }
@@ -138,6 +145,7 @@ private fun SubTrackRoot(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val isPremium by premiumRepository.observeIsPremium().collectAsState(initial = false)
 
     val exportCsv = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("text/csv"),
@@ -249,16 +257,41 @@ private fun SubTrackRoot(
             )
         }
 
+        Screen.Paywall -> {
+            PaywallScreen(
+                onBuyClick = {
+                    scope.launch {
+                        premiumRepository.purchasePremium()
+                        snackbarHostState.showSnackbar("Bem-vindo ao SubTrack Pro!")
+                        screen = Screen.Wallet
+                    }
+                },
+                onCancel = { screen = Screen.Wallet },
+            )
+        }
+
         Screen.Wallet ->
             Scaffold(
                 topBar = {
                     TopAppBar(
                         title = { Text("SubTrack") },
                         actions = {
-                            TextButton(onClick = { importCsv.launch(arrayOf("text/comma-separated-values", "text/csv")) }) {
+                            TextButton(onClick = {
+                                if (isPremium) {
+                                    importCsv.launch(arrayOf("text/comma-separated-values", "text/csv"))
+                                } else {
+                                    screen = Screen.Paywall
+                                }
+                            }) {
                                 Text("Importar")
                             }
-                            TextButton(onClick = { exportCsv.launch(csvFileName(today)) }) {
+                            TextButton(onClick = {
+                                if (isPremium) {
+                                    exportCsv.launch(csvFileName(today))
+                                } else {
+                                    screen = Screen.Paywall
+                                }
+                            }) {
                                 Text("Exportar")
                             }
                             // Sem isto, arquivar seria porta de mão única: a
@@ -272,7 +305,14 @@ private fun SubTrackRoot(
                 },
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 floatingActionButton = {
-                    FloatingActionButton(onClick = { screen = Screen.Adding }) {
+                    FloatingActionButton(onClick = {
+                        val activeCount = state.groupedByCategory.sumOf { group -> group.items.count { !it.subscription.archived } }
+                        if (!isPremium && activeCount >= 5) {
+                            screen = Screen.Paywall
+                        } else {
+                            screen = Screen.Adding
+                        }
+                    }) {
                         Text("+")
                     }
                 },

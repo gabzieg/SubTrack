@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Regras de backup para Android 11 e anteriores (fullBackupContent).
+  Android 12+ usa data_extraction_rules.xml — as duas precisam existir e
+  concordar entre si.
+
+  O que é salvo vai pro Google Drive do PRÓPRIO usuário, contra a cota dele.
+  Não passa por servidor nosso, e por isso não muda a declaração de "nenhum
+  dado coletado" na Play Store.
+
+  O journal do SQLite fica de fora de propósito: restaurar um journal
+  dessincronizado do banco é um caminho raro mas real de corrupção. Sem ele o
+  SQLite simplesmente abre o banco como estava no commit.
+-->
+<full-backup-content>
+    <include
+        domain="database"
+        path="subtrack.db" />
+    <exclude
+        domain="database"
+        path="subtrack.db-journal" />
+    <exclude
+        domain="database"
+        path="subtrack.db-wal" />
+    <exclude
+        domain="database"
+        path="subtrack.db-shm" />
+</full-backup-content>
