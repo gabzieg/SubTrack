@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.subtrack.shared.SortOrder
 import com.subtrack.shared.Subscription
 import com.subtrack.shared.SubscriptionRepository
 import com.subtrack.shared.WalletState
@@ -129,6 +130,7 @@ private fun SubTrackRoot(
 ) {
     var screen: Screen by remember { mutableStateOf(Screen.Wallet) }
     var showArchived by remember { mutableStateOf(false) }
+    var sortOrder by remember { mutableStateOf(SortOrder.RENEWAL) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -145,7 +147,7 @@ private fun SubTrackRoot(
             )
         }
     }
-    val state by remember(today, showArchived) { repository.observeWallet(today, showArchived) }
+    val state by remember(today, showArchived, sortOrder) { repository.observeWallet(today, showArchived, sortOrder) }
         .collectAsState(initial = WalletState())
 
     when (val current = screen) {
@@ -224,6 +226,7 @@ private fun SubTrackRoot(
                     state = state,
                     today = today,
                     onSubscriptionClick = { screen = Screen.Editing(it) },
+                    onSortOrderChange = { sortOrder = it },
                     modifier = Modifier.fillMaxSize().padding(padding),
                 )
             }
