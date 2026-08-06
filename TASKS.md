@@ -5,10 +5,16 @@ Fase atual: **Fase 2 — Diferenciação** (Fase 0 em 2026-07-30, Fase 1 em 2026
 ## Pendente (Fase 2 — ver ROADMAP.md)
 
 - [ ] Categorização na lista (o campo já é salvo, mas não aparece nem agrupa).
+- [ ] **Branch protection na `main`** — ação manual no GitHub: Settings → Branches → Add rule → "Require a pull request before merging" + "Require status checks to pass" (CI + CodeQL). Sem isso, o merge gate do AGENTS.md depende só de disciplina.
 
 ## Concluído
 
 ### Fase 2 — em andamento
+- [x] **Workflow hardening** (2026-08-05): fechando lacunas identificadas na análise vs. Chris Titus AI workflow:
+  - Dependabot (`.github/dependabot.yml`): atualizações semanais de Gradle + Actions; Kotlin/AGP/Compose BOM ignorados em minor/major por serem pinados no SPEC.
+  - CodeQL (`.github/workflows/codeql.yml`): scan estático em todo PR + varredura semanal agendada; queries `security-extended`.
+  - Branch protection: documentada como tarefa manual pendente (não é configurável por arquivo no repo).
+  - Code review independente: papel assumido pelo agente de IA (não CodeRabbit).
 - [x] **Export CSV** (2026-08-02): via Storage Access Framework — usuário escolhe onde salvar, sem permissão de armazenamento, dado não passa por lugar nenhum. Escaping RFC 4180 (nome com vírgula viraria duas colunas e desalinharia tudo em silêncio). Arquivadas incluídas. Decimal com ponto e sem separador de milhar, que colidiria com o separador de campo. 13 testes.
 - [x] **Verificado em emulador lendo o arquivo gravado de volta**: `"Spotify,"` saiu com aspas, centavos preservados, categoria ausente virou campo vazio e não a palavra `null`.
 - [x] **Widget de tela inicial** (2026-08-02): total mensal + próxima renovação. `RemoteViews`, não Glance (texto puro não justifica dependência nova). `updatePeriodMillis=0` — atualizado por quem sabe que mudou (worker diário pra virada do dia, edições no app pro resto), em vez de acordar o aparelho a cada 30min. Múltiplas moedas: mostra a de maior gasto anual e sinaliza que há outras, senão o número seria lido como total.

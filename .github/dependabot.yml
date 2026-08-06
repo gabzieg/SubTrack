@@ -1,0 +1,29 @@
+version: 2
+
+updates:
+  # Dependências Gradle (libs do app)
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    ignore:
+      # Kotlin, AGP e Compose BOM são pinados intencionalmente no SPEC.md.
+      # Atualizar só quando a combinação for testada manualmente — o plugin KMP
+      # tem histórico de quebrar em atualizações de Kotlin/AGP.
+      - dependency-name: "org.jetbrains.kotlin:*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "com.android.tools.build:gradle"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - dependencies
