@@ -44,6 +44,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -120,6 +122,8 @@ private sealed interface Screen {
     data object Adding : Screen
 
     data class Editing(val subscription: Subscription) : Screen
+
+    data class Importing(val rows: List<List<String>>) : Screen
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,6 +151,37 @@ private fun SubTrackRoot(
             )
         }
     }
+
+    val importCsv = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { source ->
+        if (source == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val content = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openInputStream(source)?.use { input ->
+                        BufferedReader(InputStreamReader(input, Charsets.UTF_8)).readText()
+                    }
+                }.getOrNull()
+            }
+            if (content == null) {
+                snackbarHostState.showSnackbar("Não foi possível ler o arquivo")
+                return@launch
+            }
+            val rows = com.subtrack.shared.parseCsvRows(content)
+            val header = rows.firstOrNull().orEmpty()
+            if (com.subtrack.shared.detectSubTrackFormat(header)) {
+                val result = com.subtrack.shared.importSubTrackCsv(rows)
+                scope.mutateAndRefreshWidget(context) {
+                    result.imported.forEach { repository.add(it) }
+                }
+                snackbarHostState.showSnackbar("Importadas: ${result.imported.size}, Ignoradas: ${result.skipped}")
+            } else {
+                screen = Screen.Importing(rows)
+            }
+        }
+    }
+
     val state by remember(today, showArchived, sortOrder) { repository.observeWallet(today, showArchived, sortOrder) }
         .collectAsState(initial = WalletState())
 
@@ -197,12 +232,32 @@ private fun SubTrackRoot(
             )
         }
 
+        is Screen.Importing -> {
+            ImportScreen(
+                rows = current.rows,
+                onImport = { mapping ->
+                    val result = com.subtrack.shared.importGenericCsv(current.rows, mapping, today)
+                    scope.mutateAndRefreshWidget(context) {
+                        result.imported.forEach { repository.add(it) }
+                    }
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Importadas: ${result.imported.size}, Ignoradas: ${result.skipped}")
+                    }
+                    screen = Screen.Wallet
+                },
+                onCancel = { screen = Screen.Wallet },
+            )
+        }
+
         Screen.Wallet ->
             Scaffold(
                 topBar = {
                     TopAppBar(
                         title = { Text("SubTrack") },
                         actions = {
+                            TextButton(onClick = { importCsv.launch(arrayOf("text/comma-separated-values", "text/csv")) }) {
+                                Text("Importar")
+                            }
                             TextButton(onClick = { exportCsv.launch(csvFileName(today)) }) {
                                 Text("Exportar")
                             }

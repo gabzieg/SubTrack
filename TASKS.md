@@ -8,7 +8,10 @@ Fase atual: **Fase 2 — Diferenciação** (Fase 0 em 2026-07-30, Fase 1 em 2026
 
 ## Concluído
 
-### Fase 2 — em andamento
+### Fase 3 — em andamento
+- [x] **Import de CSV (Roundtrip e Genérico)** (2026-08-06): Parser RFC 4180 robusto com suporte a aspas, CRLF e vírgulas internas. Duas modalidades: (1) detecção automática do formato SubTrack para import direto (restaurando backup exato); (2) tela `ImportScreen` para mapeamento manual de colunas de CSVs genéricos (planilhas, outros apps). Linhas inválidas reportadas num Snackbar. 20 novos testes (`CsvImportTest.kt`) garantindo segurança de parse e lógica de mapeamento.
+
+### Fase 2 — concluída (pendente ação manual no repositório)
 - [x] **Workflow hardening** (2026-08-05): fechando lacunas identificadas na análise vs. Chris Titus AI workflow:
   - Dependabot (`.github/dependabot.yml`): atualizações semanais de Gradle + Actions; Kotlin/AGP/Compose BOM ignorados em minor/major por serem pinados no SPEC.
   - CodeQL (`.github/workflows/codeql.yml`): scan estático em todo PR + varredura semanal agendada; queries `security-extended`.
