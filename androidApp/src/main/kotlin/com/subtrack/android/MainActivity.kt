@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.subtrack.shared.SortOrder
 import com.subtrack.shared.Subscription
+import com.subtrack.shared.SubscriptionDraft
 import com.subtrack.shared.SubscriptionRepository
 import com.subtrack.shared.WalletState
 import com.subtrack.shared.csvFileName
@@ -66,6 +67,9 @@ class MainActivity : ComponentActivity() {
             requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
+        val smartName = intent.getStringExtra("smart_name")
+        val smartAmount = intent.getLongExtra("smart_amount", -1L)
+
         setContent {
             // A data de hoje é lida uma vez por composição da tela. Se o app
             // ficar aberto atravessando a meia-noite, os rótulos só atualizam
@@ -77,6 +81,8 @@ class MainActivity : ComponentActivity() {
                     repository = repository,
                     premiumRepository = (application as SubTrackApp).premiumRepository,
                     today = today,
+                    initialSmartName = smartName,
+                    initialSmartAmount = smartAmount,
                 )
             }
         }
@@ -123,7 +129,7 @@ private suspend fun writeCsv(
 private sealed interface Screen {
     data object Wallet : Screen
 
-    data object Adding : Screen
+    data class Adding(val draft: SubscriptionDraft? = null) : Screen
 
     data class Editing(val subscription: Subscription) : Screen
 
@@ -138,8 +144,28 @@ private fun SubTrackRoot(
     repository: SubscriptionRepository,
     premiumRepository: com.subtrack.shared.PremiumRepository,
     today: LocalDate,
+    initialSmartName: String?,
+    initialSmartAmount: Long,
 ) {
-    var screen: Screen by remember { mutableStateOf(Screen.Wallet) }
+    // Se o app for aberto pela notificação, inicializa direto na tela Adding
+    // com um draft preenchido.
+    val initialScreen = if (initialSmartName != null && initialSmartAmount > 0) {
+        val draft = com.subtrack.shared.SubscriptionDraft(
+            name = initialSmartName,
+            amountCents = initialSmartAmount,
+            currency = "BRL",
+            cycle = com.subtrack.shared.BillingCycle.MONTHLY,
+            everyN = 1,
+            anchor = today,
+            category = null,
+            notifyDaysBefore = 3,
+        )
+        Screen.Adding(draft)
+    } else {
+        Screen.Wallet
+    }
+
+    var screen: Screen by remember { mutableStateOf(initialScreen) }
     var showArchived by remember { mutableStateOf(false) }
     var sortOrder by remember { mutableStateOf(SortOrder.RENEWAL) }
     val scope = rememberCoroutineScope()
@@ -196,9 +222,29 @@ private fun SubTrackRoot(
     when (val current = screen) {
         is Screen.Adding, is Screen.Editing -> {
             val editing = (current as? Screen.Editing)?.subscription
+            val addingDraft = (current as? Screen.Adding)?.draft
+
+            // Para reaproveitar a SubscriptionFormScreen sem refatorar o componente,
+            // podemos converter o draft numa Subscription falsa só pra preencher os campos.
+            val initialData = editing ?: addingDraft?.let { draft ->
+                Subscription(
+                    id = 0,
+                    name = draft.name,
+                    amountCents = draft.amountCents,
+                    currency = draft.currency,
+                    cycle = draft.cycle,
+                    everyN = draft.everyN,
+                    anchor = draft.anchor,
+                    category = draft.category,
+                    notifyDaysBefore = draft.notifyDaysBefore,
+                    archived = false,
+                    lastNotifiedRenewal = null,
+                )
+            }
+
             SubscriptionFormScreen(
                 today = today,
-                editing = editing,
+                editing = initialData,
                 onCancel = { screen = Screen.Wallet },
                 onSave = { draft ->
                     scope.mutateAndRefreshWidget(context) {
@@ -310,7 +356,7 @@ private fun SubTrackRoot(
                         if (!isPremium && activeCount >= 5) {
                             screen = Screen.Paywall
                         } else {
-                            screen = Screen.Adding
+                            screen = Screen.Adding()
                         }
                     }) {
                         Text("+")

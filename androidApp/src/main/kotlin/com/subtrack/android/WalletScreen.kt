@@ -1,5 +1,7 @@
 package com.subtrack.android
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,17 +18,33 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.subtrack.android.components.PieChart
+import com.subtrack.android.components.PieSlice
 import com.subtrack.shared.SortOrder
 import com.subtrack.shared.Subscription
 import com.subtrack.shared.UpcomingSubscription
 import com.subtrack.shared.WalletState
 import com.subtrack.shared.WalletTotals
 import com.subtrack.shared.formatMoney
+import com.subtrack.shared.toRecurringCost
+import com.subtrack.shared.totalMonthlyCents
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.daysUntil
 
@@ -48,7 +66,9 @@ fun WalletScreen(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { TotalsCard(state.totals) }
+        item { SmartTrackerBanner() }
+
+        item { TotalsCard(totals = state.totals, upcoming = state.upcoming) }
 
         item { SortChips(current = state.sortOrder, onSelect = onSortOrderChange) }
 
@@ -93,6 +113,57 @@ private fun EmptyWallet(modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 8.dp),
         )
+    }
+}
+
+@Composable
+private fun SmartTrackerBanner() {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var hasPermission by remember {
+        mutableStateOf(NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName))
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                hasPermission = NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    if (!hasPermission) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Smart Tracker Desativado",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    text = "Permita o acesso às notificações para o SubTrack cadastrar suas assinaturas automaticamente ao pagar no cartão.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+                TextButton(
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text("Ativar Agora", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
     }
 }
 
@@ -143,6 +214,7 @@ private fun SectionHeader(
 @Composable
 private fun TotalsCard(
     totals: List<WalletTotals>,
+    upcoming: List<UpcomingSubscription>,
     modifier: Modifier = Modifier,
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -163,6 +235,40 @@ private fun TotalsCard(
                         text = "por mês · ${formatMoney(total.yearlyCents, total.currencyCode)} por ano",
                         style = MaterialTheme.typography.bodyMedium,
                     )
+
+                    val itemsInCurrency = upcoming.filter { !it.subscription.archived && it.subscription.currency == total.currencyCode }
+                    if (itemsInCurrency.isNotEmpty()) {
+                        val allColors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary,
+                            MaterialTheme.colorScheme.tertiary,
+                            MaterialTheme.colorScheme.error,
+                            Color(0xFF009688),
+                            Color(0xFFFF9800),
+                            Color(0xFF9C27B0),
+                        )
+
+                        val sortedByCost = itemsInCurrency.map { item ->
+                            item.subscription.name to listOf(item.subscription.toRecurringCost()).totalMonthlyCents()
+                        }.sortedByDescending { it.second }
+
+                        val topItems = sortedByCost.take(5)
+                        val otherCost = sortedByCost.drop(5).sumOf { it.second }
+
+                        val slices = topItems.mapIndexed { i, pair ->
+                            PieSlice(
+                                label = pair.first,
+                                value = pair.second,
+                                color = allColors[i % allColors.size],
+                            )
+                        }.toMutableList()
+
+                        if (otherCost > 0) {
+                            slices.add(PieSlice(label = "Outros", value = otherCost, color = Color.Gray))
+                        }
+
+                        PieChart(slices = slices)
+                    }
                 }
             }
         }
