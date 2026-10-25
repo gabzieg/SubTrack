@@ -12,7 +12,7 @@
 #              Kotlin além de 2.3.x é o risco mais provável de quebra aqui.
 
 [versions]
-agp = "9.3.1"
+agp = "9.4.1"
 kotlin = "2.3.21"
 ktlint = "14.2.0"
 sqldelight = "2.3.2"
